@@ -75,10 +75,10 @@
 "use strict";
 let position = { x: 0, y: 0 };
 let cnvs = document.getElementById('canvas1');
-let fctx = cnvs.getContext('2d');   /* final drawing canvas */
+let fctx = cnvs.getContext('2d');
 let width = cnvs.width;
 let height = cnvs.height;
-let bcnvs = document.createElement('canvas');  /* background canvas */
+let bcnvs = document.createElement('canvas');
 bcnvs.width = width;
 bcnvs.height = height;
 let bctx = bcnvs.getContext('2d');
@@ -139,11 +139,11 @@ ecurve.name = 'total';
 kecurve.name = 'kinetic';
 pecurve.name = 'potential';
 plt2.legend.visible = true;
-let xc, yc, posisiAwalX, posisiAwalY; // x and y coordinates ;
+let xc, yc, posisiAwalX, posisiAwalY;
 let panjangAwalPegas, kecepatanAwalX, kecepatanAwalY, vx, vy, dt, g, massa, k;
 let time, pltTime;
 let running = false;
-function getNum(id) { /* gets the number from the GUI using the id */
+function getNum(id) {
     return eval(document.getElementById(id).value);
 }
 function init() {
@@ -243,7 +243,7 @@ function draw() {
     } else {
         fctx.fillText('Paused!', 30, 30);
     }
-    fctx.fillText('Solution time = ' + time.toFixed(3), 200, 30);
+    fctx.fillText('Elapsed time = ' + time.toFixed(3), 200, 30);
     fctx.font = '16px times';
     fctx.fillText('x = ' + xc.toFixed(3), 30, 80);
     fctx.fillText('y = ' + yc.toFixed(3), 30, 100);
