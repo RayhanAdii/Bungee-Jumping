@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src='https://abubujs.org/libs/AkPlot.latest.js'></script>
+    <title>Tugas Pemsim</title>
+    <script src='https://abubujs.org/libs/AkPlot.latest.js'></script>
 </head>
 <body onload='init();'>
-    <h1>Pendulum Massa-pegas</h1>
+    <h1>Gerak Massa-pegas</h1>
     <table width=1024>
         <tr>
             <td>
@@ -29,48 +30,44 @@
     <input type='button' onclick='running=!running;' value='run'></br></br>
     <table>
         <tr>
-            <td>m</td>
-            <td><input type='number' id='m' value=1.0></td>
+            <td>massa</td>
+            <td><input type='number' id='massa' value=1.0></td>
         </tr>
         <tr>
-            <td>k</td>
+            <td>konstantaPegas</td>
             <td><input type='number' id='k' value=1.0></td>
         </tr>
         <tr>
-            <td>g</td>
+            <td>percepatanGravitasi</td>
             <td><input type='number' id='g' value=1.0></td>
         </tr>
         <tr>
-            <td>lo</td>
-            <td><input type='number' id='lo' value=1.0></td>
+            <td>panjangAwalPegas</td>
+            <td><input type='number' id='panjangAwalPegas' value=1.0></td>
         </tr>
         <tr>
-            <td>xo</td>
-            <td><input type='number' id='xo' value=0></td>
+            <td>posisiAwalX</td>
+            <td><input type='number' id='posisiAwalX' value=0></td>
         </tr>
         <tr>
-            <td>yo</td>
-            <td><input type='number' id='yo' value=-1.0></td>
+            <td>posisiAwalY</td>
+            <td><input type='number' id='posisiAwalY' value=-1.0></td>
         </tr>
         <tr>
-            <td>vxo</td>
-            <td><input type='number' id='vxo' value=0></td>
+            <td>kecepatanAwalX</td>
+            <td><input type='number' id='kecepatanAwalX' value=0></td>
         </tr>
         <tr>
-            <td>vyo</td>
-            <td><input type='number' id='vyo' value=0></td>
+            <td>kecepatanAwalY</td>
+            <td><input type='number' id='kecepatanAwalY' value=0></td>
+        </tr>
+        <tr>
+            <td>konstantaDamping</td>
+            <td><input type="number" id='konstantaDamping' value=0.1></td>
         </tr>
         <tr>
             <td>dt</td>
             <td><input type='number' id='dt' value=0.1></td>
-        </tr>
-        <tr>
-            <td>wait</td>
-            <td><input type='number' id='wait' value=10></td>
-        </tr>
-        <tr>
-            <td>loop skip</td>
-            <td><input type='number' id='skip' value=1></td>
         </tr>
     </table>
     <script>
@@ -114,7 +111,7 @@ plt1.margins.right = 20;
 plt1.xticks.precision = 0;
 plt1.yticks.precision = 0;
 plt1.xlabel = 'time [s]';
-plt1.ylabel = 'Position [m]';
+plt1.ylabel = 'Position [massa]';
 plt1.legend.location = [430, 20];
 let xcurve = plt1.addCurveFromPoints();
 let ycurve = plt1.addCurveFromPoints();
@@ -142,8 +139,8 @@ ecurve.name = 'total';
 kecurve.name = 'kinetic';
 pecurve.name = 'potential';
 plt2.legend.visible = true;
-let xc, yc, xo, yo; // x and y coordinates ;
-let lo, vxo, vyo, vx, vy, dt, g, m, k;
+let xc, yc, posisiAwalX, posisiAwalY; // x and y coordinates ;
+let panjangAwalPegas, kecepatanAwalX, kecepatanAwalY, vx, vy, dt, g, massa, k;
 let time, pltTime;
 let running = false;
 function getNum(id) { /* gets the number from the GUI using the id */
@@ -155,19 +152,20 @@ function init() {
     time = 0.;
     pltTime = 0.;
     plt1.xlimits = [0, 100];
-    xo = getNum('xo');
-    yo = getNum('yo');
-    vxo = getNum('vxo');
-    vyo = getNum('vyo');
-    lo = getNum('lo');
-    m = getNum('m');
+    posisiAwalX = getNum('posisiAwalX');
+    posisiAwalY = getNum('posisiAwalY');
+    kecepatanAwalX = getNum('kecepatanAwalX');
+    kecepatanAwalY = getNum('kecepatanAwalY');
+    panjangAwalPegas = getNum('panjangAwalPegas');
+    massa = getNum('massa');
     k = getNum('k');
     g = getNum('g');
     dt = getNum('dt');
-    xc = xo;
-    yc = yo;
-    vx = vxo;
-    vy = vyo;
+    konstantaDamping = getNum('konstantaDamping');
+    xc = posisiAwalX;
+    yc = posisiAwalY;
+    vx = kecepatanAwalX;
+    vy = kecepatanAwalY;
     bctx.setTransform(1., 0, 0, 1, 0, 0);
     bctx.clearRect(0, 0, width, height);
     bctx.translate(Px(0), Py(0));
@@ -176,38 +174,38 @@ function init() {
     bctx.setTransform(1., 0, 0, 1, 0, 0);
     draw();
 }
-function xAccel() {
+function percepatanSumbuX() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    let damping = -0.1 * vx;
-    return -(k * xc * dl / (m * l)) + damping;
+    let dl = l - panjangAwalPegas;
+    let damping = -konstantaDamping * vx;
+    return -(k * xc * dl / (massa * l)) + damping;
 }
-function yAccel() {
+function percepatanSumbuY() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    let damping = -0.1 * vy;
-    return -(k * yc * dl / (m * l) + g) + damping;
+    let dl = l - panjangAwalPegas;
+    let damping = -konstantaDamping * vy;
+    return -(k * yc * dl / (massa * l) + g) + damping;
 }
 function kenergy() {
-    return (0.5 * m * (vx * vx + vy * vy));
+    return (0.5 * massa * (vx * vx + vy * vy));
 }
 function penergy() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    return (0.5 * k * dl * dl + m * g * (yc));
+    let dl = l - panjangAwalPegas;
+    return (0.5 * k * dl * dl + massa * g * (yc));
 }
 function energy() {
     return (kenergy() + penergy());
 }
-function marchTime() {
+function updateValue() {
     time += dt;
     pltTime += dt;
-    let ax = xAccel();
-    let ay = yAccel();
+    let ax = percepatanSumbuX();
+    let ay = percepatanSumbuY();
     xc += vx * dt + 0.5 * dt * dt * ax;
     yc += vy * dt + 0.5 * dt * dt * ay;
-    vx += ax * dt + .5 * dt * (xAccel() - ax);
-    vy += ay * dt + .5 * dt * (yAccel() - ay);
+    vx += ax * dt + .5 * dt * (percepatanSumbuX() - ax);
+    vy += ay * dt + .5 * dt * (percepatanSumbuY() - ay);
 }
 function draw() {
     if (pltTime > 100) {
@@ -257,10 +255,10 @@ function myMouseClick(e) {
     clickX = e.offsetX;
     clickY = (e.clientY + document.documentElement.scrollTop - cnvs.offsetTop);
     clickY = e.offsetY;
-    xo = iPx(clickX);
-    yo = iPy(clickY);
-    document.getElementById('xo').value = xo;
-    document.getElementById('yo').value = yo;
+    posisiAwalX = iPx(clickX);
+    posisiAwalY = iPy(clickY);
+    document.getElementById('posisiAwalX').value = posisiAwalX;
+    document.getElementById('posisiAwalY').value = posisiAwalY;
     init();
 }
 function myMouseMove(e) {
@@ -269,12 +267,12 @@ function myMouseMove(e) {
 }
 function run() {
     if (running) {
-        for (let i = 0; i < getNum('skip'); i++) {
-            marchTime();
+        for (let i = 0; i < 1; i++) {
+            updateValue();
         }
     }
     draw();
-    setTimeout(run, getNum('wait'));
+    setTimeout(run, 10);
 }
 init();
 run();

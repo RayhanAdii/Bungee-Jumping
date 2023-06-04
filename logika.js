@@ -1,4 +1,3 @@
-
 "use strict";
 let position = { x: 0, y: 0 };
 let cnvs = document.getElementById('canvas1');
@@ -9,12 +8,12 @@ let bcnvs = document.createElement('canvas');  /* background canvas */
 bcnvs.width = width;
 bcnvs.height = height;
 let bctx = bcnvs.getContext('2d');
-let hinge = document.getElementById('hinge');
-hinge.scale = 0.4;
-let spring = document.getElementById('spring');
-spring.scale = .25;
-let mass = document.getElementById('mass');
-mass.scale = 0.25;
+let engsel = document.getElementById('engsel');
+engsel.scale = 0.4;
+let pegas = document.getElementById('pegas');
+pegas.scale = .25;
+let pendulum = document.getElementById('pendulum');
+pendulum.scale = 0.25;
 let minX = -3.;
 let maxX = 3.;
 let minY = -5;
@@ -38,7 +37,7 @@ plt1.margins.right = 20;
 plt1.xticks.precision = 0;
 plt1.yticks.precision = 0;
 plt1.xlabel = 'time [s]';
-plt1.ylabel = 'Position [m]';
+plt1.ylabel = 'Position [massa]';
 plt1.legend.location = [430, 20];
 let xcurve = plt1.addCurveFromPoints();
 let ycurve = plt1.addCurveFromPoints();
@@ -66,8 +65,8 @@ ecurve.name = 'total';
 kecurve.name = 'kinetic';
 pecurve.name = 'potential';
 plt2.legend.visible = true;
-let xc, yc, xo, yo; // x and y coordinates ;
-let lo, vxo, vyo, vx, vy, dt, g, m, k;
+let xc, yc, posisiAwalX, posisiAwalY; // x and y coordinates ;
+let panjangAwalPegas, kecepatanAwalX, kecepatanAwalY, vx, vy, dt, g, massa, k;
 let time, pltTime;
 let running = false;
 function getNum(id) { /* gets the number from the GUI using the id */
@@ -79,57 +78,60 @@ function init() {
     time = 0.;
     pltTime = 0.;
     plt1.xlimits = [0, 100];
-    xo = getNum('xo');
-    yo = getNum('yo');
-    vxo = getNum('vxo');
-    vyo = getNum('vyo');
-    lo = getNum('lo');
-    m = getNum('m');
+    posisiAwalX = getNum('posisiAwalX');
+    posisiAwalY = getNum('posisiAwalY');
+    kecepatanAwalX = getNum('kecepatanAwalX');
+    kecepatanAwalY = getNum('kecepatanAwalY');
+    panjangAwalPegas = getNum('panjangAwalPegas');
+    massa = getNum('massa');
     k = getNum('k');
     g = getNum('g');
     dt = getNum('dt');
-    xc = xo;
-    yc = yo;
-    vx = vxo;
-    vy = vyo;
+    konstantaDamping = getNum('konstantaDamping');
+    xc = posisiAwalX;
+    yc = posisiAwalY;
+    vx = kecepatanAwalX;
+    vy = kecepatanAwalY;
     bctx.setTransform(1., 0, 0, 1, 0, 0);
     bctx.clearRect(0, 0, width, height);
     bctx.translate(Px(0), Py(0));
-    bctx.scale(hinge.scale, hinge.scale);
-    bctx.drawImage(hinge, -hinge.width * 0.5, -hinge.height * 0.5);
+    bctx.scale(engsel.scale, engsel.scale);
+    bctx.drawImage(engsel, -engsel.width * 0.5, -engsel.height * 0.5);
     bctx.setTransform(1., 0, 0, 1, 0, 0);
     draw();
 }
-function xAccel() {
+function percepatanSumbuX() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    return -(k * xc * dl / (m * l));
+    let dl = l - panjangAwalPegas;
+    let damping = -konstantaDamping * vx;
+    return -(k * xc * dl / (massa * l)) + damping;
 }
-function yAccel() {
+function percepatanSumbuY() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    return -(k * yc * dl / (m * l) + g);
+    let dl = l - panjangAwalPegas;
+    let damping = -konstantaDamping * vy;
+    return -(k * yc * dl / (massa * l) + g) + damping;
 }
 function kenergy() {
-    return (0.5 * m * (vx * vx + vy * vy));
+    return (0.5 * massa * (vx * vx + vy * vy));
 }
 function penergy() {
     let l = Math.sqrt(xc * xc + yc * yc);
-    let dl = l - lo;
-    return (0.5 * k * dl * dl + m * g * (yc));
+    let dl = l - panjangAwalPegas;
+    return (0.5 * k * dl * dl + massa * g * (yc));
 }
 function energy() {
     return (kenergy() + penergy());
 }
-function marchTime() {
+function updateValue() {
     time += dt;
     pltTime += dt;
-    let ax = xAccel();
-    let ay = yAccel();
+    let ax = percepatanSumbuX();
+    let ay = percepatanSumbuY();
     xc += vx * dt + 0.5 * dt * dt * ax;
     yc += vy * dt + 0.5 * dt * dt * ay;
-    vx += ax * dt + .5 * dt * (xAccel() - ax);
-    vy += ay * dt + .5 * dt * (yAccel() - ay);
+    vx += ax * dt + .5 * dt * (percepatanSumbuX() - ax);
+    vy += ay * dt + .5 * dt * (percepatanSumbuY() - ay);
 }
 function draw() {
     if (pltTime > 100) {
@@ -149,8 +151,8 @@ function draw() {
     fctx.drawImage(bcnvs, 0, 0);
     fctx.setTransform(1., 0, 0, 1, 0, 0);
     fctx.translate(Px(xc), Py(yc));
-    fctx.scale(mass.scale, mass.scale);
-    fctx.drawImage(mass, -mass.width * 0.5, -mass.height * 0.5);
+    fctx.scale(pendulum.scale, pendulum.scale);
+    fctx.drawImage(pendulum, -pendulum.width * 0.5, -pendulum.height * 0.5);
     let theta = Math.PI * (1.5) - Math.atan2(yc, xc);
     let x = Px(xc) - Px(0);
     let y = Py(yc) - Py(0);
@@ -158,8 +160,8 @@ function draw() {
     fctx.setTransform(1., 0, 0, 1, 0, 0);
     fctx.translate(Px(0), Py(0));
     fctx.rotate(theta);
-    fctx.scale(spring.scale, (length / spring.height));
-    fctx.drawImage(spring, -spring.width / 2., 0);
+    fctx.scale(pegas.scale, (length / pegas.height));
+    fctx.drawImage(pegas, -pegas.width / 2., 0);
     fctx.setTransform(1, 0, 0, 1, 0, 0);
     fctx.font = 'italic 20px times';
     if (running) {
@@ -179,10 +181,10 @@ function myMouseClick(e) {
     clickX = e.offsetX;
     clickY = (e.clientY + document.documentElement.scrollTop - cnvs.offsetTop);
     clickY = e.offsetY;
-    xo = iPx(clickX);
-    yo = iPy(clickY);
-    document.getElementById('xo').value = xo;
-    document.getElementById('yo').value = yo;
+    posisiAwalX = iPx(clickX);
+    posisiAwalY = iPy(clickY);
+    document.getElementById('posisiAwalX').value = posisiAwalX;
+    document.getElementById('posisiAwalY').value = posisiAwalY;
     init();
 }
 function myMouseMove(e) {
@@ -191,12 +193,12 @@ function myMouseMove(e) {
 }
 function run() {
     if (running) {
-        for (let i = 0; i < getNum('skip'); i++) {
-            marchTime();
+        for (let i = 0; i < 1; i++) {
+            updateValue();
         }
     }
     draw();
-    setTimeout(run, getNum('wait'));
+    setTimeout(run, 10);
 }
 init();
 run();
